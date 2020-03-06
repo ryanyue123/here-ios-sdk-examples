@@ -1,4 +1,6 @@
 target 'GuidanceApp' do
     platform :ios, '12.0'
-    pod 'HEREMaps', '>= 3.14'
+    pod 'HEREMaps'
+    pod 'Alamofire'
+    pod 'SwiftyJSON'
 end

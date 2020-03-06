@@ -1,0 +1,24 @@
+PODS:
+  - Alamofire (5.0.2)
+  - HEREMaps (3.14.2)
+  - SwiftyJSON (5.0.0)
+
+DEPENDENCIES:
+  - Alamofire
+  - HEREMaps
+  - SwiftyJSON
+
+SPEC REPOS:
+  trunk:
+    - Alamofire
+    - HEREMaps
+    - SwiftyJSON
+
+SPEC CHECKSUMS:
+  Alamofire: 3ba7a4db18b4f62c4a1c0e1cb39d7f3d52e10ada
+  HEREMaps: 183821bb064fa699a933e85e8d64b5b86e1775a1
+  SwiftyJSON: 36413e04c44ee145039d332b4f4e2d3e8d6c4db7
+
+PODFILE CHECKSUM: b66c0595c7b7ab1b3500572a2f9b7f774f15041c
+
+COCOAPODS: 1.9.0

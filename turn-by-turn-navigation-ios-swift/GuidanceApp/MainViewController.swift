@@ -5,19 +5,21 @@
 
 import UIKit
 import NMAKit
+import Alamofire
+import SwiftyJSON
 
 class MainViewController: UIViewController {
 
     class Defaults {
-        static let latitude = 49.260327
-        static let longitude = -123.115025
+        static let latitude = 33.6405
+        static let longitude = -117.8443
         static let zoomLevel : Float = 13.2
 
-        static let hereBurnabyLatitude  = 49.259149
-        static let hereBurnabyLongitude = -123.008555
+        static let hereBurnabyLatitude  = 33.6405
+        static let hereBurnabyLongitude = -117.8443
 
-        static let langleyLatitude  = 49.0736
-        static let langleyLongitude = -122.559549
+        static let langleyLatitude  = 33.8121
+        static let langleyLongitude = -117.9190
 
         static let frame = CGRect(x: 110, y: 200, width: 220, height: 120)
 
@@ -122,27 +124,48 @@ class MainViewController: UIViewController {
         // on Highway.
         let routingMode = NMARoutingMode(routingType: .fastest,
                                          transportMode: .car,
-                                         routingOptions: .avoidHighway)
+                                         routingOptions: .avoidTollRoad)
 
-        // Trigger the route calculation
-        router.calculateRoute(withStops: stops ,
-                                   routingMode: routingMode)
-        { [weak self] routeResult, error in
-            guard error == .none else {
-                self?.showMessage("Error:route calculation returned error code \(error.rawValue)")
-                return
+        AF.request(URL(string: "https://smart-city-266807.appspot.com/directions")!).responseJSON { (response) in
+            if let json = try? JSON(data: response.data!) {
+                let penalty = NMADynamicPenalty()
+                let areas = json["areas"].arrayValue
+                print(json)
+                areas.forEach { (area) in
+                    let latitude = area["latitude"].doubleValue
+                    let longitude = area["longitude"].doubleValue
+
+                    let area = NMAMapPolygon(vertices: [
+                      NMAGeoCoordinates(latitude: latitude - 0.005, longitude: longitude - 0.005),
+                      NMAGeoCoordinates(latitude: latitude - 0.005, longitude: longitude + 0.005),
+                      NMAGeoCoordinates(latitude: latitude + 0.005, longitude: longitude + 0.005),
+                      NMAGeoCoordinates(latitude: latitude + 0.005, longitude: longitude - 0.005)
+                    ])
+                    penalty.addBannedArea(area)
+                }
+
+
+                self.router.dynamicPenalty = penalty
+                self.router.calculateRoute(withStops: stops ,
+                                           routingMode: routingMode)
+                { [weak self] routeResult, error in
+                    guard error == .none else {
+                        self?.showMessage("Error:route calculation returned error code \(error.rawValue)")
+                        return
+                    }
+
+                    guard let result = routeResult, let routes = result.routes, routes.count > 0 else {
+                        self?.showMessage("Error:route result returned is not valid")
+                        return
+                    }
+
+                    // Let's add the 1st result onto the map
+                    self?.route = routes[0]
+                    self?.updateMapRoute(with: self?.route)
+
+                    self?.startNavigation()
+                }
             }
-
-            guard let result = routeResult, let routes = result.routes, routes.count > 0 else {
-                self?.showMessage("Error:route result returned is not valid")
-                return
-            }
-
-            // Let's add the 1st result onto the map
-            self?.route = routes[0]
-            self?.updateMapRoute(with: self?.route)
-
-            self?.startNavigation()
         }
     }
 
